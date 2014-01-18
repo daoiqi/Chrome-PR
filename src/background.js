@@ -169,7 +169,7 @@ function UpdateObject() {
 		return alexaRank;
 	},
 	this.getPR = function(url) {//没有pr值，可能为空
-		var url = 'http://toolbarqueries.google.com/tbr?client=navclient-auto&features=Rank&ch=6' + makehash(url) + '&q=info:' + url;
+		var url = 'http://toolbarqueries.google.com.hk/tbr?client=navclient-auto&features=Rank&ch=6' + makehash(url) + '&q=info:' + url;
 		var xhr = new XMLHttpRequest();
 		console.log("url="+url);
 		xhr.open('GET', url, false);
