@@ -59,58 +59,6 @@ function makehash(u) {
 	return GoogleCH(strord('info:'+u));
 }
 
-function getPR(url) {
-	url = 'http://toolbarqueries.google.com/tbr?client=navclient-auto&features=Rank&ch=6' + makehash(url) + '&q=info:' + url;
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, false);
-	xhr.send(null);
-	return xhr.responseText.substr(9, 2).replace(/\s$/,'');
-}
-
-function showPR(url, tabId) {
-	console.log('url:'+url+', tabId:'+tabId);
-	if(url != undefined) {
-		var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
-		if(domain != null) {
-			var alexaRank=getAlexa(url);
-			var value = getPR(url);
-			if(value == '' || isNaN(value * 1)) {
-				url = domain[2];
-				value = getPR(url);
-				value = value == '' || isNaN(value * 1) ? '?' : value + 'h';
-			}
-			updatePR(value, url, tabId,alexaRank);
-		} else
-			updatePR('?', url, tabId,0);
-	}
-}
-
-function updatePR(value, url, tabId,alexaRank) {
-
-	setPR(value);
-	setAlexa(alexaRank);
-	
-	var imageData = context.getImageData(0, 0, 19, 19);
-	
-	chrome.browserAction.setBadgeText({text: value, 'tabId': tabId});
-	chrome.browserAction.setBadgeBackgroundColor({color: value == '?' ? [190, 190, 190, 230] : [208, 0, 24, 255], 'tabId': tabId});
-	chrome.browserAction.setTitle({title: (value == '?' ? ' no PR ' : url + "  PR is " + value)+("\r\nAlexa Rank is "+alexaRank), 'tabId': tabId});
-
-	chrome.browserAction.setIcon({imageData: imageData, 'tabId': tabId});
-}
-
-function getAlexa(url){
-	url = 'http://data.alexa.com/data?cli=10&url=' + url;
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, false);
-	xhr.send(null);
-	var xmlDoc = xhr.responseXML;
-	var alexainfo = xmlDoc.documentElement.getElementsByTagName("POPULARITY")[0];
-	var alexaRank=alexainfo.getAttribute("TEXT");
-	console.log("alexa="+alexaRank);
-	return alexaRank;
-}
-
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -119,34 +67,6 @@ var prY=9.5;
 
 var imageData = context.getImageData(0, 0, 19, 19);
 
-function setPR(pr){
-	var INTERVAL = 10;
-	var prWidth = pr*18/10;
-	
-	context.clearRect(1, 10, 18, 7);
-	context.fillStyle = 'green';
-	context.fillRect(1,prY+0.5,prWidth,7);
-	context.strokeStyle ="#000";
-	context.lineWidth = 1;
-	context.strokeRect(0,prY,19,8);//
-}
-
-function setAlexa(alexa){
-	var INTERVAL=7;//0~7 1,11,101,1K,1W,10W,100W,1000W
-	var i=0;var temp=alexa;
-	while(temp/10>1){
-		temp/=10;
-		i++;
-	}
-
-	var alexaWidth=alexa ==0 ? 0:(INTERVAL-i)/INTERVAL*19;
-	context.clearRect(1, 1, 18, 6);
-	context.fillStyle = 'blue';
-	context.fillRect(0,0,alexaWidth,7);
-	context.strokeStyle ="#000";
-	context.lineWidth = 1;
-	context.strokeRect(0,0,19,7.5);
-}
 
 function UpdateObject() {
 	this.PR = 0,//网页的PR值
@@ -168,7 +88,16 @@ function UpdateObject() {
 		console.log("alexa="+alexaRank);
 		return alexaRank;
 	},
-	this.getPR = function(url) {//没有pr值，可能为空
+	this.getPR = function(url){
+		var pr = "?";
+		try{
+			pr = this.getPR1(url);
+		}catch(e){
+			pr = this.getPR2(url);
+		}
+		return pr;
+	},
+	this.getPR1 = function(url) {//没有pr值，可能为空
 		var url = 'http://toolbarqueries.google.com.hk/tbr?client=navclient-auto&features=Rank&ch=6' + makehash(url) + '&q=info:' + url;
 		var xhr = new XMLHttpRequest();
 		console.log("url="+url);
@@ -177,6 +106,16 @@ function UpdateObject() {
 		var text = xhr.responseText;
 		console.log(text);
 		return text.substr(9, 2).replace(/\s$/,'');
+	},
+	this.getPR2 = function(url){
+		var url = 'http://tool.boliquan.com/pr/pr.php?alt='+url;
+		var xhr = new XMLHttpRequest();
+		console.log("url="+url);
+		xhr.open('GET', url, false);
+		xhr.send(null);
+		var text = xhr.responseText;
+		console.log(text);
+		return text;
 	},
 	/**
 	 * 设置alexa
@@ -203,7 +142,7 @@ function UpdateObject() {
 
 		var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
 			//if(domain != null) {
-		var value = getPR(url);
+		var value = this.getPR(url);
 		this.displayValue = value;
 		if(value == '' || isNaN(value * 1)) {
 			url = domain[2];
@@ -217,7 +156,7 @@ function UpdateObject() {
 		
 	},
 	this.updateAlexa=function(url){
-		var alexa = getAlexa(this.url);
+		var alexa = this.getAlexa(this.url);
 		this.setAlexa(alexa);
 		this.updateIcon();
 	},
@@ -267,23 +206,13 @@ chrome.browserAction.setBadgeBackgroundColor({color: [210, 210, 210, 230]});
 chrome.browserAction.setBadgeText({text: '?'});
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo,tab) {
-	//showPR(changeInfo.url.split('#')[0], tabId);
-	//updateobj.setURL(tab.url.split('#')[0], tabId);
-	//console.log(tab);
-	if ("complete"==tab.status)return; 
+	if( changeInfo.url == undefined)return;
 	var url = tab.url;
 	var updateobj = new UpdateObject();
+	console.log("tab.url"+tab.url);
 	if(url != undefined) {
 		var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
 		if(domain != null) {
-			// var alexaRank=getAlexa(url);
-			// var value = getPR(url);
-			// if(value == '' || isNaN(value * 1)) {
-			// 	url = domain[2];
-			// 	value = getPR(url);
-			// 	value = value == '' || isNaN(value * 1) ? '?' : value + 'h';
-			// }
-			//updatePR(value, url, tabId,alexaRank);
 			updateobj.setURL(tab.url.split('#')[0], tabId);
 		} else{
 			//updatePR('?', url, tabId,0);
