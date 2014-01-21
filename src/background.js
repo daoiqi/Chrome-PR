@@ -206,10 +206,11 @@ chrome.browserAction.setBadgeBackgroundColor({color: [210, 210, 210, 230]});
 chrome.browserAction.setBadgeText({text: '?'});
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo,tab) {
+	console.log(changeInfo);
 	if( changeInfo.url == undefined)return;
 	var url = tab.url;
 	var updateobj = new UpdateObject();
-	console.log("tab.url"+tab.url);
+	
 	if(url != undefined) {
 		var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
 		if(domain != null) {
