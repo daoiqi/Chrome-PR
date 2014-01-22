@@ -91,14 +91,16 @@ function UpdateObject() {
 	this.getPR = function(url){
 		var pr = "?";
 		try{
-			pr = this.getPR1(url);
+			pr = this.getPR3(url);
 		}catch(e){
+			console.log(e);
 			pr = this.getPR2(url);
 		}
 		return pr;
 	},
 	this.getPR1 = function(url) {//没有pr值，可能为空
-		var url = 'http://toolbarqueries.google.com.hk/tbr?client=navclient-auto&features=Rank&ch=6' + makehash(url) + '&q=info:' + url;
+		//http://toolbarqueries.google.com.hk/tbr?client=navclient-auto&ch=61780561228&ie=UTF-8&oe=UTF-8&features=Rank:FVN&q=info:http://www.daoiqi.com/iptv6.html
+		var url = 'http://toolbarqueries.google.com.hk/tbr?client=navclient-auto&ie=UTF-8&oe=UTF-8&features=Rank:FVN&ch=6' + makehash(url) + '&q=info:' + url;
 		var xhr = new XMLHttpRequest();
 		console.log("url="+url);
 		xhr.open('GET', url, false);
@@ -117,6 +119,21 @@ function UpdateObject() {
 		console.log(text);
 		return text;
 	},
+	this.getPR3 = function(url){
+        var url = 'http://pr.links.cn/getpr.asp?queryurl=' + url;
+		var xhr = new XMLHttpRequest();
+		console.log("url="+url);
+		xhr.open('GET', url, false);
+		xhr.send(null);
+		var text = xhr.responseText;
+		var match =null;
+		if(match = text.match(/pagerank(\d+)/)){
+			return match[1];
+		}else{
+			return "?";
+		}
+
+	}
 	/**
 	 * 设置alexa
 	 */
@@ -207,16 +224,18 @@ chrome.browserAction.setBadgeText({text: '?'});
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo,tab) {
 	console.log(changeInfo);
-	if( changeInfo.url == undefined)return;
-	var url = tab.url;
-	var updateobj = new UpdateObject();
-	
-	if(url != undefined) {
-		var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
-		if(domain != null) {
-			updateobj.setURL(tab.url.split('#')[0], tabId);
-		} else{
-			//updatePR('?', url, tabId,0);
+	if( changeInfo.status == 'loading' ){
+		var url = tab.url;
+		var updateobj = new UpdateObject();
+		
+		if(url != undefined) {
+			var domain = url.match(/^(http|https):\/\/([\w.]+)(:\d+)?/);
+			if(domain != null) {
+				updateobj.setURL(tab.url.split('#')[0], tabId);
+			} else{
+				//updatePR('?', url, tabId,0);
+			}
 		}
 	}
+	
 });

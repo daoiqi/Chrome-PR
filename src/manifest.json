@@ -6,8 +6,8 @@
    "description": "Display the AlexaRank PageRank quickly",
    "background": {  "page": "background.html" },
    "name": "AlexaRank and PageRank",
-   "permissions": [ "tabs", "http://toolbarqueries.google.com/", "http://data.alexa.com/", "http://tool.boliquan.com/"],
-   "version": "1.4.0",
+   "permissions": [ "tabs", "http://toolbarqueries.google.com/", "http://data.alexa.com/", "http://pr.links.cn/" , "http://tool.boliquan.com/"],
+   "version": "1.4.2",
    "manifest_version": 2,
    "homepage_url":"https://chrome.google.com/webstore/detail/khjkcmjfgndabfkhgajlbkpmaijccmdi"
 }
