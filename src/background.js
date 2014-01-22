@@ -120,6 +120,7 @@ function UpdateObject() {
 		return text;
 	},
 	this.getPR3 = function(url){
+		url=url.replace(/^(https?:\/\/)/,"");
         var url = 'http://pr.links.cn/getpr.asp?queryurl=' + url;
 		var xhr = new XMLHttpRequest();
 		console.log("url="+url);
